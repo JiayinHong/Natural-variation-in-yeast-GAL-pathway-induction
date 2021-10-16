@@ -1,6 +1,7 @@
 % this script displays comparison between simulation results
 % and experimental data
 % created by JH on 2020.06.08, for Fig 2 & Fig 5
+% updated by JH on 2021.05.31, add GAL3 swap experiment
 
 %% for Fig 2, showing the fitting for S288C
 for dataType = {'wildtype', 'mig1d', 'gal80d'}
@@ -22,8 +23,8 @@ for dataType = {'wildtype', 'mig1d', 'gal80d'}
 end
 
 %% for Fig 5, showing phenotypic switch
-for strains = {'I14','L-1528','273614N','YJM981'...
-        ,'YPS163','YPS606','IL-01','UWOPS87'}
+for strains = {'I14','L-1528','273614N','YPS163'...
+        ,'YPS606','IL-01','UWOPS87','YPS606_GAL3_swap'}
     strain = strains{1};
     load('../metadata/best_param.mat')
     switch strain
@@ -33,8 +34,6 @@ for strains = {'I14','L-1528','273614N','YJM981'...
             param.kf83 = param.kf83 * 75;
         case '273614N'
             param.kf83 = param.kf83 * 100;
-        case 'YJM981'
-            param.aR = param.aR * 0.1;
         case 'YPS163'
             param.rHXT = param.rHXT * 0.013; 
         case 'YPS606'
@@ -43,6 +42,7 @@ for strains = {'I14','L-1528','273614N','YJM981'...
             param.kf83 = param.kf83 * 10;
         case 'UWOPS87'
             param.rHXT = param.rHXT * 0.02;
+        case 'YPS606_GAL3_swap'
     end 
     plot_heatmap(param,strain)
 end
@@ -89,6 +89,8 @@ switch dataType
         load('../traits/14-YJM975.mat')
     case 'YJM981'
         load('../traits/15-YJM981.mat')
+    case 'YPS606_GAL3_swap'
+        load('../traits/16-GAL3swap.mat')
     otherwise
         error('strain records not found')
 end
@@ -136,8 +138,12 @@ tmp_sim = log(simG1_96well);
 
 % first, heatmap for the expt trait
 figure
-set(gcf, 'position', [281 117 383 581])
-subplot(2,1,1)
+if ~strcmp(dataType,'YPS606_GAL3_swap')
+    set(gcf, 'position', [281 117 383 581])
+    subplot(2,1,1)
+else
+    set(gcf,'position',[281 389 383 309])
+end
 % to cope with missing values in experimental data
 % i.e. leave the color as white instead of using the lowest value to pad
 imAlpha = ones(size(tmp_exp));
@@ -162,19 +168,21 @@ colorLim = get(gca,'CLim');
 tt = title(sprintf('%s expt G1 induction level', dataType));
 
 % second, heatmap for simulation results
-subplot(2,1,2)
-h3=imagesc(tmp_sim./max_exp);
-h3.Parent.XTick = 1:12;
-h3.Parent.YTick = 1:8;
-h3.Parent.XTickLabel = galLabel;
-h3.Parent.YTickLabel = fliplr(gluLabel);
-h4=colorbar;
-h4.Limits = h2.Limits;  % set the same color limits for colorbar
-h4.Ticks = h2.Ticks;
-set(gca,'XTickLabelRotation',45)
-set(gca,'FontSize',20,'FontName','Times New Roman','FontWeight','normal')
-set(gca,'CLim',colorLim)  % set the same color limits for heatmap wells
-tt = title(sprintf('%s sims G1 induction level', dataType));
-% export_fig(fullfile(saveDir, sprintf('%s induction level', dataType)), '-pdf', '-transparent', '-c[NaN,NaN,NaN,NaN]')
+if ~strcmp(dataType,'YPS606_GAL3_swap')
+    subplot(2,1,2)
+    h3=imagesc(tmp_sim./max_exp);
+    h3.Parent.XTick = 1:12;
+    h3.Parent.YTick = 1:8;
+    h3.Parent.XTickLabel = galLabel;
+    h3.Parent.YTickLabel = fliplr(gluLabel);
+    h4=colorbar;
+    h4.Limits = h2.Limits;  % set the same color limits for colorbar
+    h4.Ticks = h2.Ticks;
+    set(gca,'XTickLabelRotation',45)
+    set(gca,'FontSize',20,'FontName','Times New Roman','FontWeight','normal')
+    set(gca,'CLim',colorLim)  % set the same color limits for heatmap wells
+    tt = title(sprintf('%s sims G1 induction level', dataType));
+    % export_fig(fullfile(saveDir, sprintf('%s induction level', dataType)), '-pdf', '-transparent', '-c[NaN,NaN,NaN,NaN]')
 
+end
 end
